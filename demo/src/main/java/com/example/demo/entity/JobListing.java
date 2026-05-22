@@ -26,6 +26,7 @@ public class JobListing {
 
     private String department;
     
+    @Column(columnDefinition = "TEXT")
     private String location;
 
     @Column(columnDefinition = "TEXT")

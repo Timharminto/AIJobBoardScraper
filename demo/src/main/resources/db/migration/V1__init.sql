@@ -11,7 +11,7 @@ CREATE TABLE job_listings (
     target_id BIGINT REFERENCES scrape_targets(id),
     title VARCHAR(500) NOT NULL,
     department VARCHAR(255),
-    location VARCHAR(255),
+    location TEXT,
     url TEXT,
     employment_type VARCHAR(100),
     raw_text TEXT,
