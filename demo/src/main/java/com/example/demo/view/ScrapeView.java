@@ -12,9 +12,13 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.progressbar.ProgressBar;
 import com.vaadin.flow.component.textfield.TextField;
+import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.router.RouteAlias;
 
-@Route("scrape")
+@Route(value = "", layout = MainLayout.class)         // Maps to http://localhost:8080/
+@RouteAlias(value = "scrape", layout = MainLayout.class) // Maps to http://localhost:8080/scrape
+@PageTitle("Scraper | AI Job Board")
 public class ScrapeView extends VerticalLayout {
 
     private final ScraperService scraperService;
