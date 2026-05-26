@@ -44,7 +44,6 @@ public class ScraperService {
 
         List<JobListing> jobs = new ArrayList<>();
         
-        // ADDED: A Set to track jobs we've already parsed so OpenAI's double-links don't cause duplicates
         Set<String> processedTitles = new HashSet<>(); 
         
         String[] knownDepartments = {
@@ -55,7 +54,6 @@ public class ScraperService {
         
         try {
             // LAYER 1: Jsoup fetch HTML 
-            // (Upgraded User-Agent to look like a real Chrome browser to avoid basic bot blocks)
             Document doc = Jsoup.connect(url)
                     .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
                     .timeout(15_000)
@@ -73,7 +71,6 @@ public class ScraperService {
                 org.jsoup.nodes.Element titleEl = card.selectFirst("h1, h2, h3, h4, h5, h6, strong, b, [class*=title], [class*=jobRole]");
                 
                 // --- SMART DOM CLIMBING ---
-                // Only climb if the link itself DOES NOT contain the title (Solves the Anthropic vs OpenAI issue)
                 int climbLimit = 4;
                 while (titleEl == null && card.parent() != null && climbLimit > 0) {
                     card = card.parent();
@@ -96,14 +93,13 @@ public class ScraperService {
                 }
 
                 // --- DEDUPLICATION (Crucial for OpenAI) ---
-                // If we already saved this job from the other link in the row, skip it!
                 if (processedTitles.contains(title.toLowerCase())) {
                     continue;
                 }
                 processedTitles.add(title.toLowerCase());
 
                 JobListing job = new JobListing();
-                job.setUrl(link.absUrl("href")); // Always use the direct link we found
+                job.setUrl(link.absUrl("href"));
                 job.setTitle(title);
                 
                 // --- ISOLATED ELEMENT SCANNER (Location & Dept) ---
@@ -135,7 +131,6 @@ public class ScraperService {
                         if (!foundLocations.contains(matchedLoc)) foundLocations.add(matchedLoc);
                     }
 
-                    // OpenAI "2 locations" Check
                     if (multiLocationPattern.matcher(elementText).find()) {
                         if (!foundLocations.contains("Multiple Locations")) foundLocations.add("Multiple Locations");
                     }
@@ -187,17 +182,14 @@ public class ScraperService {
         return jobRepo.saveAll(jobs);
     }
 
-    // LAYER 2 FALLBACK INTEGRATION [cite: 229-231, 237, 238]
+    // LAYER 2 FALLBACK INTEGRATION
     private List<JobListing> fallbackToScrapling(String url, Long targetId) {
         List<JobListing> jobs = new ArrayList<>();
         try {
-            // Execute the python script using Scrapling
             ProcessBuilder pb = new ProcessBuilder("python3", "scrapling_script.py", url);
             Process p = pb.start();
             BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
             
-            // In a real scenario, the python script would return JSON.
-            // Parse that JSON here into JobListing objects.
             String line;
             while ((line = in.readLine()) != null) {
                 // Parsing logic goes here

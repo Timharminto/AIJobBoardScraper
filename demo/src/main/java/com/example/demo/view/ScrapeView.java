@@ -16,8 +16,8 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.router.RouteAlias;
 
-@Route(value = "", layout = MainLayout.class)         // Maps to http://localhost:8080/
-@RouteAlias(value = "scrape", layout = MainLayout.class) // Maps to http://localhost:8080/scrape
+@Route(value = "scrape", layout = MainLayout.class)         
+// @RouteAlias(value = "scrape", layout = MainLayout.class)
 @PageTitle("Scraper | AI Job Board")
 public class ScrapeView extends VerticalLayout {
 
@@ -27,7 +27,6 @@ public class ScrapeView extends VerticalLayout {
     public ScrapeView(ScraperService scraperService) {
         this.scraperService = scraperService;
 
-        // UI Components [cite: 80-86]
         TextField urlField = new TextField("Target URL");
         urlField.setPlaceholder("https://www.anthropic.com/careers");
         urlField.setWidth("300px");
@@ -40,13 +39,12 @@ public class ScrapeView extends VerticalLayout {
         spinner.setIndeterminate(true);
         spinner.setVisible(false);
 
-        // Configure Grid Columns [cite: 85]
         grid.addColumn(JobListing::getTitle).setHeader("Title");
         grid.addColumn(JobListing::getDepartment).setHeader("Department");
         grid.addColumn(JobListing::getLocation).setHeader("Location");
         grid.addColumn(JobListing::getEmploymentType).setHeader("Type");
+        grid.addColumn(JobListing::getUrl).setHeader("Url");
         
-        // Scraping Logic & UI Thread Handling [cite: 87-96, 201]
         scrapeButton.addClickListener(e -> {
             String url = urlField.getValue();
             String company = companyField.getValue();

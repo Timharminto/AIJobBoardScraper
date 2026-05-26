@@ -43,7 +43,8 @@ public class MainLayout extends AppLayout {
     private void createDrawer() {
         SideNav nav = new SideNav();
 
-        // Adds the actual clickable tab to your sidebar!
+        nav.addItem(new SideNavItem("Dashboard", DashboardView.class, VaadinIcon.CHART_LINE.create()));
+
         nav.addItem(new SideNavItem("Web Scraper", ScrapeView.class, VaadinIcon.DOWNLOAD.create()));
 
         Scroller scroller = new Scroller(nav);

@@ -17,7 +17,6 @@ public class JobListing {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // References the scrape_targets table [cite: 50]
     @Column(name = "target_id")
     private Long targetId;
 
