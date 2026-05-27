@@ -17,30 +17,36 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.entity.JobListing;
+import com.example.demo.entity.ScrapeHistory;
 import com.example.demo.entity.ScrapeTarget;
 import com.example.demo.repository.JobListingRepository;
+import com.example.demo.repository.ScrapeHistoryRepository;
 import com.example.demo.repository.ScrapeTargetRepository;
 
 @Service
 public class ScraperService {
 
     private final ScrapeTargetRepository targetRepo;
+    private final ScrapeHistoryRepository historyRepo;
     private final JobListingRepository jobRepo;
 
-    public ScraperService(ScrapeTargetRepository targetRepo, JobListingRepository jobRepo) {
+    public ScraperService(ScrapeTargetRepository targetRepo, JobListingRepository jobRepo, ScrapeHistoryRepository historyRepo) {
         this.targetRepo = targetRepo;
         this.jobRepo = jobRepo;
+        this.historyRepo = historyRepo;
     }
 
     @Transactional
     public List<JobListing> scrape(String url, String companyName) {
-        ScrapeTarget target = targetRepo.findByUrl(url)
-                .orElse(new ScrapeTarget());
-        target.setUrl(url);
-        target.setCompany(companyName);
-        target.setLastScrapedAt(LocalDateTime.now());
-        
-        final ScrapeTarget savedTarget = targetRepo.save(target);
+        ScrapeTarget target = targetRepo.findByCompanyIgnoreCase(companyName)
+                .orElseGet(() -> {
+                    ScrapeTarget newTarget = new ScrapeTarget();
+                    newTarget.setCompany(companyName);
+                    // newTarget.setCareersUrl(url); // Set this if your entity has a URL field
+                    return targetRepo.save(newTarget);
+                });
+
+        int jobsScrapedCount = 0;
 
         List<JobListing> jobs = new ArrayList<>();
         
@@ -59,7 +65,6 @@ public class ScraperService {
                     .timeout(15_000)
                     .get(); 
             
-            // Grab ANY link that might be related to a job
             Elements links = doc.select("a[href*=/careers/], a[href*=/jobs/], a[href*=/role/], a[class*=job], a:matchesOwn((?i)(apply|view job))");
             
             if (links.isEmpty()) {
@@ -170,13 +175,19 @@ public class ScraperService {
                 else if (cardTextLower.contains("fellow") || cardTextLower.contains("fellowship")) job.setEmploymentType("Fellowship");
                 else job.setEmploymentType("Full-time");
                 
-                job.setTargetId(savedTarget.getId()); 
+                job.setTargetId(target.getId()); 
                 jobs.add(job);
+                jobsScrapedCount++;
             }
-            
+            ScrapeHistory history = new ScrapeHistory();
+            history.setScrapedAt(LocalDateTime.now());
+            history.setCompanyName(companyName);
+            history.setTargetUrl(url);
+            history.setJobsFound(jobsScrapedCount);
+            historyRepo.save(history);
         } catch (Exception e) {
             System.out.println("Layer 1 heuristics failed: " + e.getMessage() + ". Triggering Layer 2 (Scrapling)...");
-            jobs = fallbackToScrapling(url, savedTarget.getId());
+            jobs = fallbackToScrapling(url, target.getId());
         }
 
         return jobRepo.saveAll(jobs);

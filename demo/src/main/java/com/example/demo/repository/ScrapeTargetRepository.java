@@ -18,5 +18,5 @@ public interface ScrapeTargetRepository extends JpaRepository<ScrapeTarget, Long
      * @return an Optional containing the ScrapeTarget if found, or empty if not
      */
     Optional<ScrapeTarget> findByUrl(String url);
-    
+    Optional<ScrapeTarget> findByCompanyIgnoreCase(String company);
 }

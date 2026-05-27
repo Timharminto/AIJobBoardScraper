@@ -47,6 +47,7 @@ public class MainLayout extends AppLayout {
 
         nav.addItem(new SideNavItem("Web Scraper", ScrapeView.class, VaadinIcon.DOWNLOAD.create()));
 
+        nav.addItem(new SideNavItem("History", HistoryView.class, VaadinIcon.CLOCK.create()));
         Scroller scroller = new Scroller(nav);
         scroller.setClassName(LumoUtility.Padding.SMALL);
 

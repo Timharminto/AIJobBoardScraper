@@ -18,3 +18,11 @@ CREATE TABLE job_listings (
     is_active BOOLEAN DEFAULT TRUE,
     scraped_at TIMESTAMP DEFAULT NOW()
 );
+
+CREATE TABLE scrape_history (
+    id BIGSERIAL PRIMARY KEY,
+    scraped_at TIMESTAMP,
+    company_name VARCHAR(255),
+    target_url VARCHAR(255),
+    jobs_found INTEGER NOT NULL
+);
