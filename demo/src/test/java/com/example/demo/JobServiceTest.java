@@ -1,18 +1,21 @@
 package com.example.demo;
 
-import com.example.demo.entity.JobListing;
-import com.example.demo.repository.JobListingRepository;
-import com.example.demo.service.JobService;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+import com.example.demo.entity.JobListing;
+import com.example.demo.repository.JobListingRepository;
+import com.example.demo.service.JobService;
 
 @SpringBootTest
 class JobServiceTest {
@@ -43,7 +46,7 @@ class JobServiceTest {
     void searchJobs_WithValidKeyword_ReturnsMatchedJobs() {
         when(jobRepo.findAll()).thenReturn(Arrays.asList(job1, job2));
 
-        List<JobListing> results = jobService.searchJobs("software");
+        List<JobListing> results = jobService.searchJobsSimple("software");
 
         assertEquals(1, results.size());
         assertEquals("Software Engineer", results.get(0).getTitle());
@@ -53,7 +56,7 @@ class JobServiceTest {
     void searchJobs_WithEmptyKeyword_ReturnsAllJobs() {
         when(jobRepo.findAll()).thenReturn(Arrays.asList(job1, job2));
 
-        List<JobListing> results = jobService.searchJobs("");
+        List<JobListing> results = jobService.searchJobsSimple("");
 
         assertEquals(2, results.size());
         verify(jobRepo, times(1)).findAll(); 

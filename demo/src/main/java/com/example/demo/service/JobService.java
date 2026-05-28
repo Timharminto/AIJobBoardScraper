@@ -28,7 +28,7 @@ public class JobService {
     }
 
     // 3. Simple in-memory search (Great for Vaadin Grid filtering)
-    public List<JobListing> searchJobs(String searchTerm) {
+    public List<JobListing> searchJobsSimple(String searchTerm) {
         if (searchTerm == null || searchTerm.trim().isEmpty()) {
             return getAllJobs();
         }
@@ -43,5 +43,33 @@ public class JobService {
                     (job.getEmploymentType() != null && job.getEmploymentType().toLowerCase().contains(lowerCaseTerm))
                 )
                 .collect(Collectors.toList());
+    }
+
+    public List<JobListing> searchJobs(String keyword, String department, String type, String location) {
+        List<JobListing> allJobs = jobRepo.findAll();
+
+        String finalKeyword = (keyword == null) ? "" : keyword.trim().toLowerCase();
+        String finalDept = (department == null) ? "" : department.trim().toLowerCase();
+        String finalType = (type == null) ? "" : type.trim().toLowerCase();
+        String finalLocation = (location == null) ? "" : location.trim().toLowerCase();
+
+        return allJobs.stream()
+            .filter(job -> {
+                boolean matchesTerm = finalKeyword.isEmpty() || 
+                        (job.getTitle() != null && job.getTitle().toLowerCase().contains(finalKeyword)) ||
+                        (job.getLocation() != null && job.getLocation().toLowerCase().contains(finalKeyword));
+
+                boolean matchesDept = finalDept.isEmpty() || 
+                        (job.getDepartment() != null && job.getDepartment().toLowerCase().contains(finalDept));
+
+                boolean matchesType = finalType.isEmpty() || 
+                        (job.getEmploymentType() != null && job.getEmploymentType().toLowerCase().contains(finalType));
+                
+                boolean matchesLocation = finalLocation.isEmpty() || 
+                        (job.getLocation() != null && job.getEmploymentType().toLowerCase().contains(finalLocation));
+
+                return matchesTerm && matchesDept && matchesType && matchesLocation;
+            })
+            .collect(Collectors.toList());
     }
 }

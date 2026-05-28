@@ -12,7 +12,6 @@ import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.data.value.ValueChangeMode;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
@@ -26,6 +25,11 @@ public class ScrapeView extends VerticalLayout {
     
     private Grid<JobListing> grid;
     private GridListDataView<JobListing> dataView;
+
+    private TextField searchField;
+    private TextField deptFilter;
+    private TextField typeFilter;
+    private TextField locationFilter;
 
     public ScrapeView(ScraperService scraperService, JobService jobService) {
         this.scraperService = scraperService;
@@ -82,64 +86,43 @@ public class ScrapeView extends VerticalLayout {
 
     private HorizontalLayout createToolbar() {
         // --- SEARCH BAR (Title & Location) ---
-        TextField searchField = new TextField();
+        searchField = new TextField();
         searchField.setPlaceholder("Search titles, locations...");
         searchField.setPrefixComponent(VaadinIcon.SEARCH.create());
         searchField.setClearButtonVisible(true);
-        searchField.setValueChangeMode(ValueChangeMode.LAZY); 
-        searchField.addValueChangeListener(e -> dataView.refreshAll());
 
         // --- FILTER: DEPARTMENT (Free Text) ---
-        TextField deptFilter = new TextField("Department");
+        deptFilter = new TextField("Department");
         deptFilter.setPlaceholder("e.g. Engineering...");
         deptFilter.setClearButtonVisible(true);
-        deptFilter.setValueChangeMode(ValueChangeMode.LAZY); // Filters as you type!
-        deptFilter.addValueChangeListener(e -> dataView.refreshAll());
 
         // --- FILTER: EMPLOYMENT TYPE (Free Text) ---
-        TextField typeFilter = new TextField("Job Type");
+        typeFilter = new TextField("Job Type");
         typeFilter.setPlaceholder("e.g. Full-time...");
         typeFilter.setClearButtonVisible(true);
-        typeFilter.setValueChangeMode(ValueChangeMode.LAZY); // Filters as you type!
-        typeFilter.addValueChangeListener(e -> dataView.refreshAll());
 
         // --- FILTER: LOCATION TYPE (Free Text) ---
-        TextField locationFilter = new TextField("Location");
+        locationFilter = new TextField("Location");
         locationFilter.setPlaceholder("e.g. London...");
         locationFilter.setClearButtonVisible(true);
-        locationFilter.setValueChangeMode(ValueChangeMode.LAZY); // Filters as you type!
-        locationFilter.addValueChangeListener(e -> dataView.refreshAll());
 
-        // Link all free-text filters to the Grid's DataView logic
-        dataView = grid.setItems(jobService.getAllJobs()); 
-        dataView.addFilter(job -> {
-            String searchTerm = searchField.getValue().trim().toLowerCase();
-            String deptTerm = deptFilter.getValue().trim().toLowerCase();
-            String typeTerm = typeFilter.getValue().trim().toLowerCase();
-            String locationTerm = locationFilter.getValue().trim().toLowerCase();
+        // --- EXPLICIT SEARCH BUTTON ---
+        Button searchBtn = new Button("Search & Filter", VaadinIcon.FILTER.create());
+        searchBtn.addThemeName("primary");
+        
+        searchBtn.addClickListener(e -> refreshGrid());
 
-            // 1. Check Search Box
-            boolean matchesTerm = searchTerm.isEmpty() || 
-                    (job.getTitle() != null && job.getTitle().toLowerCase().contains(searchTerm)) ||
-                    (job.getLocation() != null && job.getLocation().toLowerCase().contains(searchTerm));
-
-            // 2. Check Department Text
-            boolean matchesDept = deptTerm.isEmpty() || 
-                    (job.getDepartment() != null && job.getDepartment().toLowerCase().contains(deptTerm));
-
-            // 3. Check Job Type Text
-            boolean matchesType = typeTerm.isEmpty() || 
-                    (job.getEmploymentType() != null && job.getEmploymentType().toLowerCase().contains(typeTerm));
-
-             // 4. Check Job location Text
-            boolean matchesLocation = locationTerm.isEmpty() || 
-                    (job.getLocation() != null && job.getLocation().toLowerCase().contains(locationTerm));
-
-            // Must match ALL active filters to show up in the grid
-            return matchesTerm && matchesDept && matchesType && matchesLocation;
+        Button clearBtn = new Button("Clear", VaadinIcon.CLOSE.create());
+        clearBtn.addClickListener(e -> {
+            searchField.clear();
+            deptFilter.clear();
+            typeFilter.clear();
+            if (dataView != null) {
+                dataView.refreshAll(); 
+            }
         });
 
-        HorizontalLayout toolbar = new HorizontalLayout(searchField, deptFilter, typeFilter);
+        HorizontalLayout toolbar = new HorizontalLayout(searchField, deptFilter, typeFilter, locationFilter, searchBtn, clearBtn);
         toolbar.setDefaultVerticalComponentAlignment(Alignment.BASELINE);
         toolbar.addClassNames(LumoUtility.Margin.Bottom.MEDIUM);
         return toolbar;
@@ -176,8 +159,20 @@ public class ScrapeView extends VerticalLayout {
     }
 
     private void refreshGrid() {
-        if (dataView != null) {
-            dataView = grid.setItems(jobService.getAllJobs()); 
-        }
+        try{
+        // Safely get the text from the UI boxes
+        String keyword = searchField != null ? searchField.getValue() : "";
+        String dept = deptFilter != null ? deptFilter.getValue() : "";
+        String type = typeFilter != null ? typeFilter.getValue() : "";
+        String location = locationFilter != null ? locationFilter.getValue() : "";
+
+        java.util.List<com.example.demo.entity.JobListing> results = jobService.searchJobs(keyword, dept, type, location);
+        
+        grid.setItems(results);
+        Notification.show("Success! Found " + results.size() + " jobs.", 3000, Notification.Position.MIDDLE);
+        }catch (Exception e) {
+            e.printStackTrace();
+            Notification.show("ERROR: " + e.getMessage(), 5000, Notification.Position.MIDDLE);
+        }    
     }
 }

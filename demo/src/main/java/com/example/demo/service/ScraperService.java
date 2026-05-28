@@ -42,7 +42,7 @@ public class ScraperService {
                 .orElseGet(() -> {
                     ScrapeTarget newTarget = new ScrapeTarget();
                     newTarget.setCompany(companyName);
-                    // newTarget.setCareersUrl(url); // Set this if your entity has a URL field
+                    newTarget.setUrl(url);
                     return targetRepo.save(newTarget);
                 });
 
