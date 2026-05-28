@@ -34,6 +34,10 @@ public class DashboardView extends VerticalLayout {
     public DashboardView(StatsService statsService) {
         this.statsService = statsService;
         
+        getStyle().set("min-height", "100vh");
+        getStyle().set("width", "100%");
+        getStyle().set("background-color", "var(--lumo-base-color)");
+        setAlignItems(Alignment.STRETCH);
         setSizeFull();
         setPadding(true);
         setSpacing(true);
@@ -46,7 +50,6 @@ public class DashboardView extends VerticalLayout {
         chartsContainer.setWidthFull();
         chartsContainer.setPadding(false);
 
-        // We now wrap each chart in our helper method to add the title below!
         chartsContainer.add(
             createChartWithTitleBelow(createCompanyChart(), "Jobs per Company"),
             createChartWithTitleBelow(createDepartmentChart(), "Department Distribution"),
@@ -88,7 +91,6 @@ public class DashboardView extends VerticalLayout {
         return box;
     }
 
-    // --- HELPER METHOD: Sizing and Titles Below ---
     private VerticalLayout createChartWithTitleBelow(ApexCharts chart, String titleText) {
         chart.setHeight("280px"); // This forces the charts to be much smaller
         chart.setWidthFull();
@@ -137,7 +139,6 @@ public class DashboardView extends VerticalLayout {
 
         return ApexChartsBuilder.get()
                 .withChart(ChartBuilder.get().withType(Type.BAR).build())
-                // 'isHorizontal' turns this into a horizontal bar chart so long job titles fit nicely
                 .withPlotOptions(PlotOptionsBuilder.get().withBar(BarBuilder.get().withHorizontal(true).build()).build())
                 .withXaxis(XAxisBuilder.get().withCategories(categories).build())
                 .withSeries(new Series<>("Postings", values))

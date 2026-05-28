@@ -27,7 +27,6 @@ public class HistoryView extends VerticalLayout {
         grid.setSizeFull();
         grid.addThemeNames("row-stripes", "borders");
 
-        // Format the date nicely
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd MMM yyyy, HH:mm");
 
         grid.addColumn(history -> history.getScrapedAt() != null ? history.getScrapedAt().format(formatter) : "")
@@ -49,7 +48,6 @@ public class HistoryView extends VerticalLayout {
             .setHeader("Jobs Found")
             .setSortable(true);
 
-        // Fetch data sorted by newest first
         grid.setItems(historyRepo.findAll(Sort.by(Sort.Direction.DESC, "scrapedAt")));
 
         add(grid);

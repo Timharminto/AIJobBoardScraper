@@ -18,13 +18,10 @@ public class MainLayout extends AppLayout {
     }
 
     private void createHeader() {
-        // The hamburger menu button that toggles the side drawer
         DrawerToggle toggle = new DrawerToggle();
 
-        // The title of your application in the navbar
         H1 title = new H1("AI Job Board");
         
-        // Using Lumo utility classes to style the title nicely
         title.addClassNames(
             LumoUtility.FontSize.LARGE, 
             LumoUtility.Margin.MEDIUM

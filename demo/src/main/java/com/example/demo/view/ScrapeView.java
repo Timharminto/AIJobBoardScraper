@@ -1,5 +1,6 @@
 package com.example.demo.view;
 
+import com.example.demo.dto.ScrapeResult;
 import com.example.demo.entity.JobListing;
 import com.example.demo.service.JobService;
 import com.example.demo.service.ScraperService;
@@ -9,6 +10,7 @@ import com.vaadin.flow.component.grid.dataview.GridListDataView;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -71,11 +73,33 @@ public class ScrapeView extends VerticalLayout {
             }
             
             try {
-                scraperService.scrape(urlField.getValue(), companyField.getValue());
-                Notification.show("Scraping successful!", 3000, Notification.Position.BOTTOM_END);
-                refreshGrid();
+                ScrapeResult result = scraperService.scrape(urlField.getValue(), companyField.getValue());
+
+                if (result.isSuccess()) {
+                    Notification notification = Notification.show(
+                        String.format("Success! Scraped %d jobs using %s.", result.getJobs().size(), result.getLayerUsed()),
+                        5000, 
+                        Notification.Position.BOTTOM_END
+                    );
+                    notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+                    
+                    grid.setItems(result.getJobs());
+                } else {
+                    Notification notification = Notification.show(
+                        "Scrape Engine Failed: " + result.getErrorMessage(),
+                        5000, 
+                        Notification.Position.MIDDLE
+                    );
+                    notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+                }
+
             } catch (Exception ex) {
-                Notification.show("Scraping failed: " + ex.getMessage(), 5000, Notification.Position.MIDDLE);
+                Notification notification = Notification.show(
+                    "System Error: " + ex.getMessage(),
+                    5000, 
+                    Notification.Position.MIDDLE
+                );
+                notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
             }
         });
 
@@ -160,7 +184,6 @@ public class ScrapeView extends VerticalLayout {
 
     private void refreshGrid() {
         try{
-        // Safely get the text from the UI boxes
         String keyword = searchField != null ? searchField.getValue() : "";
         String dept = deptFilter != null ? deptFilter.getValue() : "";
         String type = typeFilter != null ? typeFilter.getValue() : "";
